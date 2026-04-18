@@ -7,6 +7,8 @@
   2. Отримує рекомендації відео (Get video recommendations) та обирає бажаний ролик.
   3. Система відтворює відео, періодично показуючи рекламні вставки (Watch ads).
 - **Альтернативні сценарії / помилки:**
+  - **404 Not Found** — відео з вказаним ідентифікатором не існує (`VideoService`: `"Video not found"`).
+  - **410 Gone** — відео було видалено або деактивоване адміністратором (`AdminService`: відео переведено у статус неактивного).
 
 **2.Авторизація в системі (Authorize with login and password)**
 
@@ -17,6 +19,10 @@
   2. Вводить свої облікові дані (логін та пароль) .
   3. Система перевіряє дані та надає доступ до персонального профілю.
 - **Альтернативні сценарії / помилки:**
+  - **400 Bad Request** — при реєстрації: ім'я користувача або email вже зайнято (`AuthService`: `"Username already registered"` / `"Email already registered"`).
+  - **401 Unauthorized** — неправильне ім'я користувача або пароль (`AuthService`: `"Incorrect username"` / `"Incorrect password"`); також повертається при зверненні до захищених ендпоінтів без токена або з недійсним JWT (`dependencies.get_current_user`).
+  - **403 Forbidden** — обліковий запис заблоковано (`"User account is banned"`) або видалено (`"User account deleted"`); у таких випадках вхід неможливий.
+  - **500 Internal Server Error** — непередбачена помилка при створенні запису користувача в базі даних (`AuthService.register_user`).
 
 **3. Створення та керування плейлистами (Create and manage playlists)**
 
@@ -27,6 +33,9 @@
   2.  Вказує назву та налаштування приватності плейлиста.
   3.  Знаходить потрібне відео та зберігає його до створеного плейлиста (Save videos to playlist) .
 - **Альтернативні сценарії / помилки:**
+  - **401 Unauthorized** — користувач не авторизований; JWT-токен відсутній або недійсний (`dependencies.get_current_user`).
+  - **404 Not Found** — плейлист з вказаним ідентифікатором не знайдено (`PlaylistService`: `"Playlist not found"`); або користувача не знайдено (`PlaylistService`: `"User not found"`).
+  - **410 Gone** — обліковий запис користувача було видалено (`UserService.get_active_user_or_404`: `"User has been deleted"`).
 
 **4. Фінансова підтримка автора (Support creator)**
 
@@ -38,6 +47,9 @@
   3.  Підтверджує транзакцію.
   4.  Система обробляє платіж та надає відповідні привілеї (значок спонсора, доступ до ексклюзивного контенту).
 - **Альтернативні сценарії / помилки:**
+  - **401 Unauthorized** — користувач не авторизований; JWT-токен відсутній або недійсний (`dependencies.get_current_user`).
+  - **404 Not Found** — канал автора або відео не знайдено.
+  - **410 Gone** — обліковий запис користувача або автора було видалено.
 
 **5. Модерація проблемного контенту (Take action on bad content)**
 
@@ -48,6 +60,10 @@
   2.  Переглядає матеріали та перевіряє їх на порушення правил платформи.
   3.  У разі підтвердження порушення, модератор вживає відповідних заходів (видалення контенту, попередження або блокування автора) .
 - **Альтернативні сценарії / помилки:**
+  - **401 Unauthorized** — запит без токена або з недійсним JWT (`dependencies.get_current_user`).
+  - **403 Forbidden** — авторизований користувач не має прав адміністратора (`dependencies.require_admin`).
+  - **404 Not Found** — скарга не знайдена (`AdminService`: `"Report not found"`); відео не знайдено (`AdminService`: `"Video not found"`); користувач не знайдений (`AdminService`: `"User not found"`).
+  - **400 Bad Request** — конфлікт стану: скарга вже оброблена (`"Report already resolved"`); відео вже деактивоване (`"Video is already inactive"`); монетизацію вже відключено (`"Video is already not monetized"`); користувача вже заблоковано (`"User is already banned"`).
 
 **6. Завантаження та керування відео (Upload and manage videos)**
 
@@ -59,3 +75,7 @@
   3.  Система успішно обробляє файл та публікує його для глядачів.
   4.  Згодом автор переглядає статистику свого каналу (View channel stats), щоб оцінити успішність ролика .
 - **Альтернативні сценарії / помилки:**
+  - **401 Unauthorized** — запит без токена або з недійсним JWT (`dependencies.get_current_user`).
+  - **403 Forbidden** — власника каналу заблоковано (`VideoService.create_with_comment`: `"Channel owner is banned"`).
+  - **404 Not Found** — канал не знайдено (`VideoService.create_video`: `"Channel not found"`); власника відео не знайдено (`VideoService.create_with_comment`: `"Video owner not found"`).
+  - **410 Gone** — обліковий запис власника каналу було видалено (`VideoService.create_with_comment`: `"Channel owner has been deleted"`).
