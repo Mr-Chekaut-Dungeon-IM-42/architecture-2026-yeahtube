@@ -107,8 +107,11 @@ cd databases-2025-yeahtube
 # Перший запуск - створення тестової бази
 docker compose up -d
 
-# Запуск тестів
-make test
+# Запуск інтеграційних тестів
+make integration-testing
+
+# Запуск юніт тестів
+make unit-testing
 
 # Запуск конкретного файлу
 pytest tests/test_admin.py
