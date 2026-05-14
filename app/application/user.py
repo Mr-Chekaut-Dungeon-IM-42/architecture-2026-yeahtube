@@ -1,6 +1,3 @@
-# Application layer: use-case orchestration
-# Moved from app/services/user.py
-
 from datetime import datetime
 
 from sqlalchemy.orm import Session

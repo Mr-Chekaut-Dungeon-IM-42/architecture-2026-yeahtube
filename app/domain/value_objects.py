@@ -6,10 +6,7 @@ from app.domain.errors import DomainError
 
 
 class DomainValidationError(DomainError):
-    """Raised when a Value Object invariant is violated.
-
-    Kept as a subclass for tests/clarity, but Presentation may catch DomainError.
-    """
+    """Raised when a Value Object invariant is violated."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,7 +35,6 @@ class Email:
     value: str
 
     def __post_init__(self) -> None:
-        # Keep it intentionally simple: DB already uses EmailStr in API schemas.
         if self.value is None or not isinstance(self.value, str):
             raise DomainValidationError("Email must be a string")
         if "@" not in self.value or self.value.startswith("@") or self.value.endswith("@"):

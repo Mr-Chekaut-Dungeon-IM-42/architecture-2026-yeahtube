@@ -1,6 +1,3 @@
-# Application layer: use-case orchestration
-# Moved from app/services/video.py
-
 from datetime import date
 
 from sqlalchemy.orm import Session

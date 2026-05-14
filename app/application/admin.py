@@ -1,6 +1,3 @@
-# Application layer: use-case orchestration
-# Moved from app/services/admin.py
-
 from sqlalchemy.orm import Session
 
 from app.domain.errors import NotFoundError, ValidationError

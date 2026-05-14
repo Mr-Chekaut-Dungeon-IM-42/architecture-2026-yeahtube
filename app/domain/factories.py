@@ -20,8 +20,6 @@ class UserFactory:
     Complex invariants (DB-backed):
       - username uniqueness
       - email uniqueness
-
-    NOTE: This factory does not create HTTP errors.
     """
 
     uniqueness: UserUniquenessChecker
@@ -44,8 +42,6 @@ class UserFactory:
         if self.uniqueness.email_exists(email_vo.value):
             raise DomainError("Email is already registered")
 
-        # id is unknown before persistence; in an anemic model we can use 0/None.
-        # Here we use 0 to keep the type simple (int). Persistence assigns a real id.
         return UserD(
             id=0,
             username=username_vo,

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from app.db import models as orm
 from app.domain.models import (
     ChannelD,
@@ -16,11 +14,6 @@ from app.domain.models import (
 )
 from app.domain.value_objects import BoundedText, Email, WatchedPercentage
 
-
-# NOTE: This module intentionally depends on both ORM and domain.
-# Domain layer does NOT depend on ORM.
-
-
 def user_to_domain(u: orm.User) -> UserD:
     return UserD(
         id=u.id,
@@ -34,7 +27,6 @@ def user_to_domain(u: orm.User) -> UserD:
 
 
 def user_to_orm(d: UserD, *, hashed_password: str) -> orm.User:
-    # User ORM requires hashed_password.
     return orm.User(
         id=d.id,
         username=d.username.value,

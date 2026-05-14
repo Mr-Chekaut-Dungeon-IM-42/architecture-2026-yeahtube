@@ -1,8 +1,5 @@
 class DomainError(Exception):
-    """Base exception for all domain/business errors.
-
-    Intentionally framework-agnostic (no HTTP, no DB details).
-    """
+    """Base exception for all domain/business errors."""
 
 
 class NotFoundError(DomainError):

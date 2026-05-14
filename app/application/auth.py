@@ -1,13 +1,9 @@
-# Application layer: use-case orchestration
-# Moved from app/services/auth.py
-
 from datetime import date
 
 from sqlalchemy.orm import Session
 
 from app.db.models import User
 from app.domain.errors import (
-    DomainError,
     ForbiddenError,
     UnauthorizedError,
 )
