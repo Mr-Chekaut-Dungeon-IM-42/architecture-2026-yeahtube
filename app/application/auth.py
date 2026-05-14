@@ -3,11 +3,14 @@
 
 from datetime import date
 
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.models import User
-from app.domain.errors import DomainError
+from app.domain.errors import (
+    DomainError,
+    ForbiddenError,
+    UnauthorizedError,
+)
 from app.domain.factories import UserFactory
 from app.infrastructure.repositories.user_uniqueness import SqlAlchemyUserUniquenessChecker
 from app.repositories.auth import AuthRepository
@@ -18,26 +21,25 @@ from app.utils.auth import create_access_token, get_password_hash, verify_passwo
 class AuthService:
     @staticmethod
     def register_user(db: Session, user_data: UserRegister) -> UserOut:
+        checker = SqlAlchemyUserUniquenessChecker(db)
+        factory = UserFactory(uniqueness=checker)
+
+        _domain_user = factory.register_new_user(
+            username=user_data.username,
+            email=user_data.email,
+            created_at=date.today(),
+            is_moderator=False,
+        )
+
+        hashed_password = get_password_hash(user_data.password)
+
         try:
-            checker = SqlAlchemyUserUniquenessChecker(db)
-            factory = UserFactory(uniqueness=checker)
-
-            _domain_user = factory.register_new_user(
-                username=user_data.username,
-                email=user_data.email,
-                created_at=date.today(),
-                is_moderator=False,
-            )
-
-            hashed_password = get_password_hash(user_data.password)
-
             new_user = AuthRepository.create_user(
                 db=db,
                 username=_domain_user.username.value,
                 email=_domain_user.email.value,
                 hashed_password=hashed_password,
             )
-
             response = UserOut(
                 id=new_user.id,
                 username=new_user.username,
@@ -46,54 +48,27 @@ class AuthService:
                 is_banned=new_user.is_banned,
                 created_at=new_user.created_at,
             )
-
             db.commit()
             return response
-
-        except DomainError as e:
-            # DomainError -> HTTP is better handled by presentation handlers,
-            # but we keep the current behavior for compatibility.
+        except Exception:
             db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e),
-            )
-        except Exception as e:
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to create user: {str(e)}",
-            )
+            raise
 
     @staticmethod
     def login_user(db: Session, credentials: UserLogin) -> Token:
         user = AuthRepository.get_user_by_username(db, credentials.username)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise UnauthorizedError("Incorrect username")
 
         if not verify_password(credentials.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise UnauthorizedError("Incorrect password")
 
         if user.is_banned:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is banned",
-            )
+            raise ForbiddenError("User account is banned")
 
         if user.is_deleted:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is deleted",
-            )
+            raise ForbiddenError("User account is deleted")
 
         access_token = create_access_token(
             data={

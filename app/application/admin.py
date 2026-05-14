@@ -1,9 +1,9 @@
 # Application layer: use-case orchestration
 # Moved from app/services/admin.py
 
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.domain.errors import NotFoundError, ValidationError
 from app.infrastructure.mappers.orm_domain import channel_to_domain, user_to_domain, video_to_domain
 from app.repositories.admin import AdminRepository
 from app.schemas.schemas import (
@@ -33,15 +33,10 @@ class AdminService:
         video = AdminRepository.get_video_by_id(db, video_id)
 
         if not video:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
-            )
+            raise NotFoundError("Video not found")
 
         if not video.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Video is already inactive",
-            )
+            raise ValidationError("Video is already inactive")
 
         video.is_active = False
         db.commit()
@@ -60,15 +55,10 @@ class AdminService:
         video = AdminRepository.get_video_by_id(db, video_id)
 
         if not video:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
-            )
+            raise NotFoundError("Video not found")
 
         if not video.is_monetized:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Video is already not monetized",
-            )
+            raise ValidationError("Video is already not monetized")
 
         video.is_monetized = False
         db.commit()
@@ -87,14 +77,10 @@ class AdminService:
         user = AdminRepository.get_user_by_id(db, user_id)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundError("User not found")
 
         if user.is_banned:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User is already banned"
-            )
+            raise ValidationError("User is already banned")
 
         user.is_banned = True
         db.commit()
@@ -113,9 +99,7 @@ class AdminService:
         channel = AdminRepository.get_channel_by_id(db, channel_id)
 
         if not channel:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Channel not found"
-            )
+            raise NotFoundError("Channel not found")
 
         AdminRepository.add_channel_strike(db, channel.id, video_id=None)
         db.commit()
@@ -164,15 +148,10 @@ class AdminService:
         report = AdminRepository.get_report_by_id(db, report_id)
 
         if not report:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Report not found"
-            )
+            raise NotFoundError("Report not found")
 
         if report.is_resolved:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Report is already resolved",
-            )
+            raise ValidationError("Report is already resolved")
 
         report.is_resolved = True
         db.commit()

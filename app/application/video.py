@@ -3,10 +3,10 @@
 
 from datetime import date
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.models import Channel, Comment, User, Video
+from app.domain.errors import ForbiddenError, GoneError, NotFoundError
 from app.infrastructure.mappers.orm_domain import comment_to_domain, video_to_domain
 from app.repositories.video import VideoRepository
 from app.schemas.schemas import (
@@ -26,7 +26,7 @@ class VideoService:
     def get_video(db: Session, video_id: int) -> VideoResponse:
         video = VideoRepository.get_by_id(db, video_id)
         if not video:
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise NotFoundError("Video not found")
         d_video = video_to_domain(video)
         return VideoResponse(
             id=d_video.id,
@@ -42,7 +42,7 @@ class VideoService:
     def create_video(db: Session, video_data: VideoCreate) -> VideoResponse:
         channel = db.get(Channel, video_data.channel_id)
         if not channel:
-            raise HTTPException(status_code=404, detail="Channel not found")
+            raise NotFoundError("Channel not found")
         video = Video(
             title=video_data.title,
             description=video_data.description,
@@ -67,7 +67,7 @@ class VideoService:
     def update_video(db: Session, video_id: int, video_data: VideoUpdate) -> VideoResponse:
         video = VideoRepository.get_by_id(db, video_id, for_update=True)
         if not video:
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise NotFoundError("Video not found")
         if video_data.title is not None:
             video.title = video_data.title
         if video_data.description is not None:
@@ -93,14 +93,14 @@ class VideoService:
     def delete_video(db: Session, video_id: int) -> None:
         video = VideoRepository.get_by_id(db, video_id)
         if not video:
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise NotFoundError("Video not found")
         VideoRepository.delete(db, video)
 
     @staticmethod
     def get_stats(db: Session, video_id: int) -> VideoStatsResponse:
         video = VideoRepository.get_by_id(db, video_id)
         if not video:
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise NotFoundError("Video not found")
         total_views, likes, dislikes, total_comments = VideoRepository.get_stats(db, video_id)
         d_video = video_to_domain(video)
         return VideoStatsResponse(
@@ -116,7 +116,7 @@ class VideoService:
     def get_comments(db: Session, video_id: int, page: int, limit: int) -> VideoCommentsResponse:
         video = VideoRepository.get_by_id(db, video_id)
         if not video:
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise NotFoundError("Video not found")
         d_video = video_to_domain(video)
         skip = (page - 1) * limit
         total_count, comments = VideoRepository.get_comments(db, video_id, skip, limit)
@@ -147,14 +147,14 @@ class VideoService:
     ) -> VideoWithCommentResponse:
         channel = db.get(Channel, video_data.channel_id)
         if not channel:
-            raise HTTPException(status_code=404, detail="Channel not found")
+            raise NotFoundError("Channel not found")
         author = db.get(User, channel.owner_id)
         if not author:
-            raise HTTPException(status_code=404, detail="Channel owner not found")
+            raise NotFoundError("Channel owner not found")
         if author.is_deleted:
-            raise HTTPException(status_code=410, detail="Channel owner has been deleted")
+            raise GoneError("Channel owner has been deleted")
         if author.is_banned:
-            raise HTTPException(status_code=403, detail="Channel owner is banned")
+            raise ForbiddenError("Channel owner is banned")
         video = Video(
             title=video_data.title,
             description=video_data.description,

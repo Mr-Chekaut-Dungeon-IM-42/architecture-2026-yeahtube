@@ -3,9 +3,9 @@
 
 from datetime import datetime
 
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.domain.errors import GoneError, NotFoundError, ValidationError
 from app.infrastructure.mappers.orm_domain import user_to_domain
 from app.repositories.user import UserRepository
 from app.schemas.schemas import (
@@ -21,13 +21,9 @@ class UserService:
     def get_active_user_or_404(db: Session, user_id: int) -> UserDetailedResponse:
         user = UserRepository.get_by_id(db, user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundError("User not found")
         if user.is_deleted:
-            raise HTTPException(
-                status_code=status.HTTP_410_GONE, detail="User has been deleted"
-            )
+            raise GoneError("User has been deleted")
 
         d_user = user_to_domain(user)
         return UserDetailedResponse(
@@ -50,16 +46,16 @@ class UserService:
     ) -> UserDetailedResponse:
         user = UserRepository.get_by_id(db, user_id, for_update=True)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise NotFoundError("User not found")
         if user.is_deleted:
-            raise HTTPException(status_code=410, detail="User has been deleted")
+            raise GoneError("User has been deleted")
 
         if user_data.username and UserRepository.exists_by_username(
             db, user_data.username, user_id
         ):
-            raise HTTPException(status_code=400, detail="Username already exists")
+            raise ValidationError("Username already exists")
         if user_data.email and UserRepository.exists_by_email(db, user_data.email, user_id):
-            raise HTTPException(status_code=400, detail="Email already exists")
+            raise ValidationError("Email already exists")
 
         if user_data.username:
             user.username = user_data.username
@@ -76,9 +72,9 @@ class UserService:
     def soft_delete_user(db: Session, user_id: int) -> None:
         user = UserRepository.get_by_id(db, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise NotFoundError("User not found")
         if user.is_deleted:
-            raise HTTPException(status_code=410, detail="User already deleted")
+            raise GoneError("User already deleted")
         user.is_deleted = True
         db.commit()
 
