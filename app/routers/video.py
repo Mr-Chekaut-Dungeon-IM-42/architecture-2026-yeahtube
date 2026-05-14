@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Query
 from app.db.session import DBDep
-from app.services.video import VideoService
+from app.application.video import VideoService
 from app.schemas.schemas import (
     VideoCreate, VideoUpdate, VideoResponse, VideoWithCommentCreate,
     VideoStatsResponse, VideoWithCommentResponse

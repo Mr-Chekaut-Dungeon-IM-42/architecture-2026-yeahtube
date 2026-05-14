@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.db.session import DBDep
 from app.dependencies import require_admin
-from app.services.admin import AdminService
+from app.application.admin import AdminService
 from app.schemas.schemas import (
     ChannelAnalyticsListResponse,
     ChannelStrikeResponse,
