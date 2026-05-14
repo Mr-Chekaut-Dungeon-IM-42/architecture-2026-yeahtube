@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.user import UserRepository
+from app.infrastructure.mappers.orm_domain import user_to_domain
 from app.schemas.schemas import (
     UserDetailedResponse, UserUpdate, UserCredibilityResponse, VideoResponse
 )
@@ -14,7 +15,17 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         if user.is_deleted:
             raise HTTPException(status_code=status.HTTP_410_GONE, detail="User has been deleted")
-        return UserDetailedResponse.model_validate(user)
+        # Domain mapping: enforce domain invariants and keep domain independent from ORM.
+        d_user = user_to_domain(user)
+        # Convert domain to the existing API schema without exposing ORM.
+        return UserDetailedResponse(
+            id=d_user.id,
+            username=d_user.username.value,
+            email=d_user.email.value,
+            created_at=d_user.created_at,
+            is_moderator=d_user.is_moderator,
+            is_deleted=d_user.is_deleted,
+        )
 
     @staticmethod
     def get_all_users(db: Session) -> list[UserDetailedResponse]:

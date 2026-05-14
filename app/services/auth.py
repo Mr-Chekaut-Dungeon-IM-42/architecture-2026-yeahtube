@@ -1,6 +1,11 @@
+from datetime import date
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.auth import AuthRepository
+from app.infrastructure.repositories.user_uniqueness import SqlAlchemyUserUniquenessChecker
+from app.domain.factories import UserFactory
+from app.domain.errors import DomainError
 from app.utils.auth import create_access_token, get_password_hash, verify_password
 from app.schemas.schemas import Token, UserOut, UserRegister, UserLogin
 from app.db.models import User
@@ -9,27 +14,25 @@ from app.db.models import User
 class AuthService:
     @staticmethod
     def register_user(db: Session, user_data: UserRegister) -> UserOut:
-        existing_user = AuthRepository.get_user_by_username(db, user_data.username)
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already registered",
-            )
-
-        existing_email = AuthRepository.get_user_by_email(db, user_data.email)
-        if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered",
-            )
-
         try:
-            hashed_password = get_password_hash(user_data.password)
+            checker = SqlAlchemyUserUniquenessChecker(db)
+            factory = UserFactory(uniqueness=checker)
 
-            new_user = AuthRepository.create_user(
-                db=db,
+            # Domain creation + invariants (simple + DB-backed)
+            _domain_user = factory.register_new_user(
                 username=user_data.username,
                 email=user_data.email,
+                created_at=date.today(),
+                is_moderator=False,
+            )
+
+            hashed_password = get_password_hash(user_data.password)
+
+            # Persist through existing repository (still returns ORM)
+            new_user = AuthRepository.create_user(
+                db=db,
+                username=_domain_user.username.value,
+                email=_domain_user.email.value,
                 hashed_password=hashed_password,
             )
 
@@ -45,9 +48,12 @@ class AuthService:
             db.commit()
             return response
 
-        except HTTPException:
+        except DomainError as e:
             db.rollback()
-            raise
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except Exception as e:
             db.rollback()
             raise HTTPException(
