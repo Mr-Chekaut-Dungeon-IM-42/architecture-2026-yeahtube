@@ -238,7 +238,7 @@ class CreateVideoWithCommentCommandHandler:
     def __init__(self, db: Session):
         self._db = db
 
-    def handle(self, cmd: CreateVideoWithCommentCommand) -> int:
+    def handle(self, cmd: CreateVideoWithCommentCommand) -> tuple[int, int]:
         channel = self._db.get(Channel, cmd.channel_id)
         if not channel:
             raise NotFoundError("Channel not found")
@@ -268,7 +268,7 @@ class CreateVideoWithCommentCommandHandler:
         )
         self._db.add(comment)
         self._db.commit()
-        return int(video.id)
+        return int(video.id), int(comment.id)
 
 
 class CreatePlaylistCommandHandler:

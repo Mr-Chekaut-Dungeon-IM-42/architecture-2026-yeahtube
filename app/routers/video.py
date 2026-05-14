@@ -79,7 +79,7 @@ async def get_video_comments(
 
 @router.post("/with-comment", status_code=status.HTTP_201_CREATED, response_model=VideoWithCommentResponse)
 async def create_video_with_comment(video_data: VideoWithCommentCreate, db: DBDep):
-    video_id = CreateVideoWithCommentCommandHandler(db).handle(
+    video_id, comment_id = CreateVideoWithCommentCommandHandler(db).handle(
         CreateVideoWithCommentCommand(
             title=video_data.title,
             description=video_data.description,
@@ -89,6 +89,9 @@ async def create_video_with_comment(video_data: VideoWithCommentCreate, db: DBDe
             is_monetized=video_data.is_monetized,
         )
     )
-    # Keep response model shape; query the created video and return a placeholder comment info.
     video = VideoQueryHandler(db).handle_get_video(GetVideoByIdQuery(video_id=video_id))
-    return VideoWithCommentResponse(video=video, comment_id=0, comment_text=video_data.initial_comment)
+    return VideoWithCommentResponse(
+        video=video,
+        comment_id=comment_id,
+        comment_text=video_data.initial_comment,
+    )
