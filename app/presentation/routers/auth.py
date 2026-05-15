@@ -3,7 +3,7 @@ from app.db.models import User
 from app.db.session import DBDep
 from app.dependencies import get_current_user
 from app.application.auth import AuthService
-from app.schemas.schemas import Token, UserLogin, UserOut, UserRegister
+from app.presentation.schemas.schemas import Token, UserLogin, UserOut, UserRegister
 
 router = APIRouter(tags=["auth"], prefix="/auth")
 

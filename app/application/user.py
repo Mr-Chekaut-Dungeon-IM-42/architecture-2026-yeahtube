@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.domain.errors import GoneError, NotFoundError, ValidationError
 from app.infrastructure.mappers.orm_domain import user_to_domain
 from app.repositories.user import UserRepository
-from app.schemas.schemas import (
+from app.presentation.schemas.schemas import (
     UserCredibilityResponse,
     UserDetailedResponse,
     UserUpdate,
