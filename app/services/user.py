@@ -14,6 +14,8 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         if user.is_deleted:
             raise HTTPException(status_code=status.HTTP_410_GONE, detail="User has been deleted")
+        if user.is_banned:
+            raise HTTPException(status_code=status.HTTP_410_GONE, detail="User is banned")
         return UserDetailedResponse.model_validate(user)
 
     @staticmethod
