@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.schemas import UserUpdate, VideoWithCommentCreate
+from app.presentation.schemas.schemas import UserUpdate, VideoWithCommentCreate
 
 
 def test_user_update_validates_email():

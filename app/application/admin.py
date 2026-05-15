@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.domain.errors import NotFoundError, ValidationError
 from app.infrastructure.mappers.orm_domain import channel_to_domain, user_to_domain, video_to_domain
 from app.repositories.admin import AdminRepository
-from app.schemas.schemas import (
+from app.presentation.schemas.schemas import (
     ChannelAnalyticsListResponse,
     ChannelAnalyticsResponse,
     ChannelInfo,

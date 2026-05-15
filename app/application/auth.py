@@ -10,7 +10,7 @@ from app.domain.errors import (
 from app.domain.factories import UserFactory
 from app.infrastructure.repositories.user_uniqueness import SqlAlchemyUserUniquenessChecker
 from app.repositories.auth import AuthRepository
-from app.schemas.schemas import Token, UserLogin, UserOut, UserRegister
+from app.presentation.schemas.schemas import Token, UserLogin, UserOut, UserRegister
 from app.utils.auth import create_access_token, get_password_hash, verify_password
 
 

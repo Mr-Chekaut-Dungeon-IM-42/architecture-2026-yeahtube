@@ -6,7 +6,7 @@ from app.db.models import Channel, Comment, User, Video
 from app.domain.errors import ForbiddenError, GoneError, NotFoundError
 from app.infrastructure.mappers.orm_domain import comment_to_domain, video_to_domain
 from app.repositories.video import VideoRepository
-from app.schemas.schemas import (
+from app.presentation.schemas.schemas import (
     CommentResponse,
     VideoCommentsResponse,
     VideoCreate,

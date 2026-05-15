@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 from app.db.session import DBDep
 from app.application.user import UserService
-from app.schemas.schemas import UserUpdate, UserDetailedResponse, VideoResponse, UserCredibilityResponse
+from app.presentation.schemas.schemas import UserUpdate, UserDetailedResponse, VideoResponse, UserCredibilityResponse
 
 router = APIRouter(tags=["user"], prefix="/user")
 

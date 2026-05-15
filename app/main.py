@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from . import routers
+from .presentation import routers
 from .presentation.exception_handlers import register_exception_handlers
 
 
