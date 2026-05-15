@@ -197,13 +197,12 @@ class AdminService:
                     username=username,
                     email=email,
                     is_banned=is_banned,
-                    reports_count=reports_count,
+            reports_created=reports_count,
                 )
                 for user_id, username, email, is_banned, reports_count in results
             ],
             count=len(results),
-            skip=skip,
-            limit=limit,
+        min_reports_threshold=min_reports,
         )
 
     @staticmethod
@@ -212,16 +211,43 @@ class AdminService:
     ) -> ChannelAnalyticsListResponse:
         results = AdminRepository.get_channels_with_reports_analytics(db, min_reports, limit)
 
-        return ChannelAnalyticsListResponse(
-            channels=[
+        analytics: list[ChannelAnalyticsResponse] = []
+        for (
+            channel_id,
+            channel_name,
+            strikes,
+            owner_username,
+            total_reports,
+            reported_videos_count,
+            unique_reporters,
+            resolved_percentage,
+        ) in results:
+            risk_level = "LOW"
+            if (total_reports or 0) >= 10 or (strikes or 0) >= 3:
+                risk_level = "HIGH"
+            elif (total_reports or 0) >= 3 or (strikes or 0) >= 1:
+                risk_level = "MEDIUM"
+
+            analytics.append(
                 ChannelAnalyticsResponse(
-                    channel=ChannelInfo(id=channel_id, name=name, owner_id=owner_id),
-                    stats=ReportStats(
-                        total_reports=total_reports,
-                        resolved_reports=resolved_reports,
-                        unresolved_reports=unresolved_reports,
+                    channel=ChannelInfo(
+                        id=channel_id,
+                        name=channel_name,
+                        strikes=int(strikes or 0),
+                        owner_username=owner_username,
                     ),
+                    report_stats=ReportStats(
+                        total_reports=int(total_reports or 0),
+                        reported_videos_count=int(reported_videos_count or 0),
+                        unique_reporters=int(unique_reporters or 0),
+                        resolved_percentage=float(resolved_percentage or 0.0),
+                    ),
+                    risk_level=risk_level,
                 )
-                for channel_id, name, owner_id, total_reports, resolved_reports, unresolved_reports in results
-            ]
+            )
+
+        return ChannelAnalyticsListResponse(
+            analytics=analytics,
+            count=len(analytics),
+            min_reports_threshold=min_reports,
         )
