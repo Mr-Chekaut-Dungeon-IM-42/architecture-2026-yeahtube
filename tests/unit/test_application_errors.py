@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.application.auth import AuthService
+from app.application.dto.auth import LoginCommand
 from app.application.user import UserService
 from app.domain.errors import GoneError, NotFoundError, UnauthorizedError
 
@@ -31,7 +32,7 @@ def test_auth_login_raises_unauthorized_when_user_missing(monkeypatch):
     )
 
     with pytest.raises(UnauthorizedError):
-        AuthService.login_user(db=None, credentials=type("C", (), {"username": "x", "password": "y"})())
+        AuthService.login_user(db=None, cmd=LoginCommand(username="x", password="y"))
 
 
 def test_user_get_active_raises_not_found(monkeypatch):
