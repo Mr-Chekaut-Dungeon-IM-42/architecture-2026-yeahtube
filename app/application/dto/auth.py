@@ -22,6 +22,7 @@ class UserView:
     username: str
     email: str
     is_moderator: bool
+    is_deleted: bool
     is_banned: bool
     created_at: str
 
