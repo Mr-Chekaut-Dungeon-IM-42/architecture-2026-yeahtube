@@ -32,11 +32,9 @@ class UserFactory:
         created_at: date,
         is_moderator: bool = False,
     ) -> UserD:
-        # Simple invariants via VOs (raise DomainValidationError -> InvariantViolation).
         username_vo = BoundedText(username, 3, 32)
         email_vo = Email(email)
 
-        # Complex invariants via DIP.
         if self.uniqueness.username_exists(username_vo.value):
             raise DomainError("Username is already taken")
         if self.uniqueness.email_exists(email_vo.value):

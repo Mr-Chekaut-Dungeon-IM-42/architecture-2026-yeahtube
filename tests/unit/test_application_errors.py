@@ -7,18 +7,6 @@ from app.application.dto.auth import LoginCommand
 from app.application.user import UserService
 from app.domain.errors import GoneError, NotFoundError, UnauthorizedError
 
-
-class _FakeUser:
-    def __init__(self, *, hashed_password: str, is_banned: bool = False, is_deleted: bool = False):
-        self.id = 1
-        self.username = "u"
-        self.email = "u@example.com"
-        self.is_moderator = False
-        self.is_banned = is_banned
-        self.is_deleted = is_deleted
-        self.hashed_password = hashed_password
-
-
 class _FakeAuthRepo:
     @staticmethod
     def get_user_by_username(db, username: str):  # noqa: ANN001
